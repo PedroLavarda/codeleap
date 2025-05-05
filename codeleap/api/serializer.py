@@ -2,16 +2,17 @@ from rest_framework import serializers
 from .models import Post, Comment
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
     class Meta:
         model = Comment
-        fields = '__all__'
+        fields = ['id', 'username', 'content', 'created_datetime', 'likes']
 
 class PostSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ['id', 'username', 'title', 'content', 'created_datetime', 'likes', 'comments']
+
 

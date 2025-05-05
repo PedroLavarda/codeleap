@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Post, Comment
+from django.contrib.auth.hashers import make_password
 from .serializer import PostSerializer, CommentSerializer
 from datetime import datetime
 
@@ -13,9 +13,12 @@ def posts_view(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -51,3 +54,24 @@ def comments_view_by_post(request, post_id):
             serializer.save(post=post)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def login_view(request):
+    return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def logout_view(request):
+    return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def signup_view(request):
+
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if User.objects.filter(username=username).exists():
+        return Response({'error': 'Username already taken'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = User.objects.create(username=username, password=make_password(password))
+    return Response({'message': 'User created'}, status=status.HTTP_201_CREATED)

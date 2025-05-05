@@ -1,4 +1,5 @@
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.hashers import make_password
@@ -67,8 +68,13 @@ def login_view(request):
     return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
-    return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+    try:
+        request.user.auth_token.delete()  # ✅ Delete the token
+    except:
+        return Response({'error': 'Token not found'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def signup_view(request):

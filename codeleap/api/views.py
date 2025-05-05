@@ -4,6 +4,8 @@ from rest_framework import status
 from django.contrib.auth.hashers import make_password
 from .serializer import PostSerializer, CommentSerializer
 from datetime import datetime
+from .models import Post, Comment
+from django.contrib.auth.models import User
 
 @api_view(['GET', 'POST'])
 def posts_view(request):
@@ -48,9 +50,13 @@ def comments_view_by_post(request, post_id):
         return Response(serializer.data)
 
     elif request.method == 'POST':
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             post = Post.objects.get(id=post_id)
+            serializer.save(user=request.user)
             serializer.save(post=post)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

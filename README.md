@@ -6,4 +6,5 @@ to install dependencies:
 pip install -r requirements.txt
 
 to run:
-python2 manage.py runserver
+cd codeleap
+python3 manage.py runserver
